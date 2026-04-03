@@ -16,11 +16,11 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2.3.0
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7 # ratchet:dependabot/fetch-metadata@v2.3.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 

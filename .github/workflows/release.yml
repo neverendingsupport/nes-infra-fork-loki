@@ -11,7 +11,7 @@ jobs:
   createRelease:
     if: "${{ fromJSON(needs.shouldRelease.outputs.shouldRelease) }}"
     needs:
-    - "shouldRelease"
+      - "shouldRelease"
     outputs:
       draft: "${{ steps.check_release.outputs.draft }}"
       exists: "${{ steps.check_release.outputs.exists }}"
@@ -20,292 +20,260 @@ jobs:
       sha: "${{ needs.shouldRelease.outputs.sha }}"
     runs-on: "ubuntu-latest"
     steps:
-    - name: "pull code to release"
-      uses: "actions/checkout@v4"
-      with:
-        path: "release"
-        repository: "${{ env.RELEASE_REPO }}"
-    - name: "pull release library code"
-      uses: "actions/checkout@v4"
-      with:
-        path: "lib"
-        ref: "${{ env.RELEASE_LIB_REF }}"
-        repository: "grafana/loki-release"
-    - name: "setup node"
-      uses: "actions/setup-node@v4"
-      with:
-        node-version: 20
-    - name: "auth gcs"
-      uses: "google-github-actions/auth@v2"
-      with:
-        credentials_json: "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}"
-    - name: "Set up Cloud SDK"
-      uses: "google-github-actions/setup-gcloud@v2"
-      with:
-        version: ">= 452.0.0"
-    - id: "get_github_app_token"
-      if: "${{ fromJSON(env.USE_GITHUB_APP_TOKEN) }}"
-      name: "get github app token"
-      uses: "actions/create-github-app-token@v1"
-      with:
-        app-id: "${{ secrets.APP_ID }}"
-        owner: "${{ github.repository_owner }}"
-        private-key: "${{ secrets.APP_PRIVATE_KEY }}"
-    - id: "github_app_token"
-      name: "set github token"
-      run: |
-        if [[ "${USE_GITHUB_APP_TOKEN}" == "true" ]]; then
-          echo "token=${{ steps.get_github_app_token.outputs.token }}" >> $GITHUB_OUTPUT
-        else
-          echo "token=${{ secrets.GH_TOKEN }}" >> $GITHUB_OUTPUT
-        fi
-    - name: "download binaries"
-      run: |
-        echo "downloading binaries to $(pwd)/dist"
-        gsutil cp -r gs://${BUILD_ARTIFACTS_BUCKET}/${{ needs.shouldRelease.outputs.sha }}/dist .
-      working-directory: "release"
-    - env:
-        GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
-      id: "check_release"
-      name: "check if release exists"
-      run: |
-        set +e
-        isDraft="$(gh release view --json="isDraft" --jq=".isDraft" ${{ needs.shouldRelease.outputs.name }} 2>&1)"
-        set -e
-        if [[ "$isDraft" == "release not found" ]]; then
-          echo "exists=false" >> $GITHUB_OUTPUT
-        else
-          echo "exists=true" >> $GITHUB_OUTPUT
-        fi
-        
-        if [[ "$isDraft" == "true" ]]; then
-          echo "draft=true" >> $GITHUB_OUTPUT
-        fi
-      working-directory: "release"
-    - id: "release"
-      if: "${{ !fromJSON(steps.check_release.outputs.exists) }}"
-      name: "create release"
-      run: |
-        npm install
-        npm exec -- release-please github-release \
-          --draft \
-          --release-type simple \
-          --repo-url "${{ env.RELEASE_REPO }}" \
-          --target-branch "${{ needs.shouldRelease.outputs.branch }}" \
-          --token "${{ steps.github_app_token.outputs.token }}" \
-          --shas-to-tag "${{ needs.shouldRelease.outputs.prNumber }}:${{ needs.shouldRelease.outputs.sha }}"
-      working-directory: "lib"
-    - env:
-        GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
-      id: "upload"
-      name: "upload artifacts"
-      run: |
-        gh release upload --clobber ${{ needs.shouldRelease.outputs.name }} dist/*
-      working-directory: "release"
-    - if: "${{ fromJSON(env.PUBLISH_TO_GCS) }}"
-      name: "release artifacts"
-      uses: "google-github-actions/upload-cloud-storage@v2"
-      with:
-        destination: "${{ env.PUBLISH_BUCKET }}"
-        parent: false
-        path: "release/dist"
-        process_gcloudignore: false
+      - name: "pull code to release"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "release"
+          repository: "${{ env.RELEASE_REPO }}"
+      - name: "pull release library code"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "lib"
+          ref: "${{ env.RELEASE_LIB_REF }}"
+          repository: "grafana/loki-release"
+      - name: "setup node"
+        uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020" # ratchet:actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: "auth gcs"
+        uses: "google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed" # ratchet:google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}"
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f" # ratchet:google-github-actions/setup-gcloud@v2
+        with:
+          version: ">= 452.0.0"
+      - id: "get_github_app_token"
+        if: "${{ fromJSON(env.USE_GITHUB_APP_TOKEN) }}"
+        name: "get github app token"
+        uses: "actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547" # ratchet:actions/create-github-app-token@v1
+        with:
+          app-id: "${{ secrets.APP_ID }}"
+          owner: "${{ github.repository_owner }}"
+          private-key: "${{ secrets.APP_PRIVATE_KEY }}"
+      - id: "github_app_token"
+        name: "set github token"
+        run: |
+          if [[ "${USE_GITHUB_APP_TOKEN}" == "true" ]]; then
+            echo "token=${{ steps.get_github_app_token.outputs.token }}" >> $GITHUB_OUTPUT
+          else
+            echo "token=${{ secrets.GH_TOKEN }}" >> $GITHUB_OUTPUT
+          fi
+      - name: "download binaries"
+        run: |
+          echo "downloading binaries to $(pwd)/dist"
+          gsutil cp -r gs://${BUILD_ARTIFACTS_BUCKET}/${{ needs.shouldRelease.outputs.sha }}/dist .
+        working-directory: "release"
+      - env:
+          GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
+        id: "check_release"
+        name: "check if release exists"
+        run: |
+          set +e
+          isDraft="$(gh release view --json="isDraft" --jq=".isDraft" ${{ needs.shouldRelease.outputs.name }} 2>&1)"
+          set -e
+          if [[ "$isDraft" == "release not found" ]]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
+          if [[ "$isDraft" == "true" ]]; then
+            echo "draft=true" >> $GITHUB_OUTPUT
+          fi
+        working-directory: "release"
+      - id: "release"
+        if: "${{ !fromJSON(steps.check_release.outputs.exists) }}"
+        name: "create release"
+        run: |
+          npm install
+          npm exec -- release-please github-release \
+            --draft \
+            --release-type simple \
+            --repo-url "${{ env.RELEASE_REPO }}" \
+            --target-branch "${{ needs.shouldRelease.outputs.branch }}" \
+            --token "${{ steps.github_app_token.outputs.token }}" \
+            --shas-to-tag "${{ needs.shouldRelease.outputs.prNumber }}:${{ needs.shouldRelease.outputs.sha }}"
+        working-directory: "lib"
+      - env:
+          GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
+        id: "upload"
+        name: "upload artifacts"
+        run: |
+          gh release upload --clobber ${{ needs.shouldRelease.outputs.name }} dist/*
+        working-directory: "release"
+      - if: "${{ fromJSON(env.PUBLISH_TO_GCS) }}"
+        name: "release artifacts"
+        uses: "google-github-actions/upload-cloud-storage@c0f6160ff80057923ff50e5e567695cea181ec23" # ratchet:google-github-actions/upload-cloud-storage@v2
+        with:
+          destination: "${{ env.PUBLISH_BUCKET }}"
+          parent: false
+          path: "release/dist"
+          process_gcloudignore: false
   createReleaseBranch:
     needs:
-    - "publishRelease"
+      - "publishRelease"
     outputs:
       branchExists: "${{ steps.create_branch.outputs.branch_exists }}"
       branchName: "${{ steps.create_branch.outputs.branch_name }}"
     runs-on: "ubuntu-latest"
     steps:
-    - name: "pull code to release"
-      uses: "actions/checkout@v4"
-      with:
-        path: "release"
-        repository: "${{ env.RELEASE_REPO }}"
-    - id: "extract_branch"
-      name: "extract branch name"
-      run: |
-        echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-      working-directory: "release"
-    - id: "get_github_app_token"
-      if: "${{ fromJSON(env.USE_GITHUB_APP_TOKEN) }}"
-      name: "get github app token"
-      uses: "actions/create-github-app-token@v1"
-      with:
-        app-id: "${{ secrets.APP_ID }}"
-        owner: "${{ github.repository_owner }}"
-        private-key: "${{ secrets.APP_PRIVATE_KEY }}"
-    - id: "github_app_token"
-      name: "set github token"
-      run: |
-        if [[ "${USE_GITHUB_APP_TOKEN}" == "true" ]]; then
-          echo "token=${{ steps.get_github_app_token.outputs.token }}" >> $GITHUB_OUTPUT
-        else
-          echo "token=${{ secrets.GH_TOKEN }}" >> $GITHUB_OUTPUT
-        fi
-    - env:
-        GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
-        VERSION: "${{ needs.publishRelease.outputs.name }}"
-      id: "create_branch"
-      name: "create release branch"
-      run: |
-        # Debug and clean the version variable
-        echo "Original VERSION: $VERSION"
-        
-        # Remove all quotes (both single and double)
-        VERSION=$(echo $VERSION | tr -d '"' | tr -d "'")
-        echo "After removing quotes: $VERSION"
-        
-        # Extract version without the 'v' prefix if it exists
-        VERSION="${VERSION#v}"
-        echo "After removing v prefix: $VERSION"
-        
-        # Extract major and minor versions
-        MAJOR=$(echo $VERSION | cut -d. -f1)
-        MINOR=$(echo $VERSION | cut -d. -f2)
-        echo "MAJOR: $MAJOR, MINOR: $MINOR"
-        
-        # Create branch name from template
-        BRANCH_TEMPLATE="release-\${major}.\${minor}.x"
-        BRANCH_NAME=${BRANCH_TEMPLATE//\$\{major\}/$MAJOR}
-        BRANCH_NAME=${BRANCH_NAME//\$\{minor\}/$MINOR}
-        
-        echo "Checking if branch already exists: $BRANCH_NAME"
-        
-        # Check if branch exists
-        if git ls-remote --heads origin $BRANCH_NAME | grep -q $BRANCH_NAME; then
-          echo "Branch $BRANCH_NAME already exists, skipping creation"
-          echo "branch_exists=true" >> $GITHUB_OUTPUT
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        else
-          echo "Creating branch: $BRANCH_NAME from tag: ${{ needs.publishRelease.outputs.name }}"
-          
-          # Create branch from the tag
-          git fetch --tags
-          git checkout "${{ steps.extract_branch.outputs.branch }}"
-          git checkout -b $BRANCH_NAME
-          git push -u origin $BRANCH_NAME
-          
-          echo "branch_exists=false" >> $GITHUB_OUTPUT
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        fi
-      working-directory: "release"
+      - name: "pull code to release"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "release"
+          repository: "${{ env.RELEASE_REPO }}"
+      - id: "extract_branch"
+        name: "extract branch name"
+        run: |
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        working-directory: "release"
+      - id: "get_github_app_token"
+        if: "${{ fromJSON(env.USE_GITHUB_APP_TOKEN) }}"
+        name: "get github app token"
+        uses: "actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547" # ratchet:actions/create-github-app-token@v1
+        with:
+          app-id: "${{ secrets.APP_ID }}"
+          owner: "${{ github.repository_owner }}"
+          private-key: "${{ secrets.APP_PRIVATE_KEY }}"
+      - id: "github_app_token"
+        name: "set github token"
+        run: |
+          if [[ "${USE_GITHUB_APP_TOKEN}" == "true" ]]; then
+            echo "token=${{ steps.get_github_app_token.outputs.token }}" >> $GITHUB_OUTPUT
+          else
+            echo "token=${{ secrets.GH_TOKEN }}" >> $GITHUB_OUTPUT
+          fi
+      - env:
+          GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
+          VERSION: "${{ needs.publishRelease.outputs.name }}"
+        id: "create_branch"
+        name: "create release branch"
+        run: "# Debug and clean the version variable\necho \"Original VERSION: $VERSION\"\n\n# Remove all quotes (both single and double)\nVERSION=$(echo $VERSION | tr -d '\"' | tr -d \"'\")\necho \"After removing quotes: $VERSION\"\n\n# Extract version without the 'v' prefix if it exists\nVERSION=\"${VERSION#v}\"\necho \"After removing v prefix: $VERSION\"\n\n# Extract major and minor versions\nMAJOR=$(echo $VERSION | cut -d. -f1)\nMINOR=$(echo $VERSION | cut -d. -f2)\necho \"MAJOR: $MAJOR, MINOR: $MINOR\"\n\n# Create branch name from template\nBRANCH_TEMPLATE=\"release-\\${major}.\\${minor}.x\"\nBRANCH_NAME=${BRANCH_TEMPLATE//\\$\\{major\\}/$MAJOR}\nBRANCH_NAME=${BRANCH_NAME//\\$\\{minor\\}/$MINOR}\n\necho \"Checking if branch already exists: $BRANCH_NAME\"\n\n# Check if branch exists\nif git ls-remote --heads origin $BRANCH_NAME | grep -q $BRANCH_NAME; then\n  echo \"Branch $BRANCH_NAME already exists, skipping creation\"\n  echo \"branch_exists=true\" >> $GITHUB_OUTPUT\n  echo \"branch_name=$BRANCH_NAME\" >> $GITHUB_OUTPUT\nelse\n  echo \"Creating branch: $BRANCH_NAME from tag: ${{ needs.publishRelease.outputs.name }}\"\n  \n  # Create branch from the tag\n  git fetch --tags\n  git checkout \"${{ steps.extract_branch.outputs.branch }}\"\n  git checkout -b $BRANCH_NAME\n  git push -u origin $BRANCH_NAME\n  \n  echo \"branch_exists=false\" >> $GITHUB_OUTPUT\n  echo \"branch_name=$BRANCH_NAME\" >> $GITHUB_OUTPUT\nfi\n"
+        working-directory: "release"
   publishDockerPlugins:
+
     needs:
-    - "createRelease"
+      - "createRelease"
     runs-on: "ubuntu-latest"
+
     steps:
-    - name: "pull release library code"
-      uses: "actions/checkout@v4"
-      with:
-        path: "lib"
-        ref: "${{ env.RELEASE_LIB_REF }}"
-        repository: "grafana/loki-release"
-    - name: "pull code to release"
-      uses: "actions/checkout@v4"
-      with:
-        path: "release"
-        repository: "${{ env.RELEASE_REPO }}"
-    - name: "auth gcs"
-      uses: "google-github-actions/auth@v2"
-      with:
-        credentials_json: "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}"
-    - name: "Set up Cloud SDK"
-      uses: "google-github-actions/setup-gcloud@v2"
-      with:
-        version: ">= 452.0.0"
-    - name: "Set up QEMU"
-      uses: "docker/setup-qemu-action@v3"
-    - name: "set up docker buildx"
-      uses: "docker/setup-buildx-action@v3"
-    - name: "Login to DockerHub (from vault)"
-      uses: "grafana/shared-workflows/actions/dockerhub-login@main"
-    - name: "download and prepare plugins"
-      run: |
-        echo "downloading images to $(pwd)/plugins"
-        gsutil cp -r gs://${BUILD_ARTIFACTS_BUCKET}/${{ needs.createRelease.outputs.sha }}/plugins .
-        mkdir -p "release/clients/cmd/docker-driver"
-    - name: "publish docker driver"
-      uses: "./lib/actions/push-images"
-      with:
-        buildDir: "release/clients/cmd/docker-driver"
-        imageDir: "plugins"
-        imagePrefix: "${{ env.IMAGE_PREFIX }}"
-        isLatest: "${{ needs.createRelease.outputs.isLatest }}"
-        isPlugin: true
+      - name: "pull release library code"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+
+        with:
+          path: "lib"
+          ref: "${{ env.RELEASE_LIB_REF }}"
+          repository: "grafana/loki-release"
+
+      - name: "pull code to release"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "release"
+
+          repository: "${{ env.RELEASE_REPO }}"
+
+      - name: "auth gcs"
+        uses: "google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed" # ratchet:google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}"
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f" # ratchet:google-github-actions/setup-gcloud@v2
+        with:
+
+          version: ">= 452.0.0"
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130" # ratchet:docker/setup-qemu-action@v3
+      - name: "set up docker buildx"
+        uses: "docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f" # ratchet:docker/setup-buildx-action@v3
+
+      - name: "Login to DockerHub (from vault)"
+        uses: "grafana/shared-workflows/actions/dockerhub-login@c40cd34c3b8982cf51cad94f0b339ff447ab2cc2" # ratchet:grafana/shared-workflows/actions/dockerhub-login@main
+      - name: "download and prepare plugins"
+        run: |
+          echo "downloading images to $(pwd)/plugins"
+          gsutil cp -r gs://${BUILD_ARTIFACTS_BUCKET}/${{ needs.createRelease.outputs.sha }}/plugins .
+          mkdir -p "release/clients/cmd/docker-driver"
+      - name: "publish docker driver"
+        uses: "./lib/actions/push-images"
+        with:
+          buildDir: "release/clients/cmd/docker-driver"
+          imageDir: "plugins"
+          imagePrefix: "${{ env.IMAGE_PREFIX }}"
+          isLatest: "${{ needs.createRelease.outputs.isLatest }}"
+          isPlugin: true
   publishImages:
     needs:
-    - "createRelease"
+      - "createRelease"
     runs-on: "ubuntu-latest"
     steps:
-    - name: "pull release library code"
-      uses: "actions/checkout@v4"
-      with:
-        path: "lib"
-        ref: "${{ env.RELEASE_LIB_REF }}"
-        repository: "grafana/loki-release"
-    - name: "auth gcs"
-      uses: "google-github-actions/auth@v2"
-      with:
-        credentials_json: "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}"
-    - name: "Set up Cloud SDK"
-      uses: "google-github-actions/setup-gcloud@v2"
-      with:
-        version: ">= 452.0.0"
-    - name: "Set up QEMU"
-      uses: "docker/setup-qemu-action@v3"
-    - name: "set up docker buildx"
-      uses: "docker/setup-buildx-action@v3"
-    - name: "Login to DockerHub (from vault)"
-      uses: "grafana/shared-workflows/actions/dockerhub-login@main"
-    - name: "download images"
-      run: |
-        echo "downloading images to $(pwd)/images"
-        gsutil cp -r gs://${BUILD_ARTIFACTS_BUCKET}/${{ needs.createRelease.outputs.sha }}/images .
-    - name: "publish docker images"
-      uses: "./lib/actions/push-images"
-      with:
-        imageDir: "images"
-        imagePrefix: "${{ env.IMAGE_PREFIX }}"
-        isLatest: "${{ needs.createRelease.outputs.isLatest }}"
+      - name: "pull release library code"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "lib"
+          ref: "${{ env.RELEASE_LIB_REF }}"
+          repository: "grafana/loki-release"
+      - name: "auth gcs"
+        uses: "google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed" # ratchet:google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}"
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f" # ratchet:google-github-actions/setup-gcloud@v2
+        with:
+          version: ">= 452.0.0"
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130" # ratchet:docker/setup-qemu-action@v3
+      - name: "set up docker buildx"
+        uses: "docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f" # ratchet:docker/setup-buildx-action@v3
+      - name: "Login to DockerHub (from vault)"
+        uses: "grafana/shared-workflows/actions/dockerhub-login@c40cd34c3b8982cf51cad94f0b339ff447ab2cc2" # ratchet:grafana/shared-workflows/actions/dockerhub-login@main
+      - name: "download images"
+        run: |
+          echo "downloading images to $(pwd)/images"
+          gsutil cp -r gs://${BUILD_ARTIFACTS_BUCKET}/${{ needs.createRelease.outputs.sha }}/images .
+      - name: "publish docker images"
+        uses: "./lib/actions/push-images"
+        with:
+          imageDir: "images"
+          imagePrefix: "${{ env.IMAGE_PREFIX }}"
+          isLatest: "${{ needs.createRelease.outputs.isLatest }}"
   publishRelease:
     needs:
-    - "createRelease"
-    - "publishImages"
-    - "publishDockerPlugins"
+      - "createRelease"
+      - "publishImages"
+      - "publishDockerPlugins"
     outputs:
       name: "${{ needs.createRelease.outputs.name }}"
     runs-on: "ubuntu-latest"
     steps:
-    - name: "pull code to release"
-      uses: "actions/checkout@v4"
-      with:
-        path: "release"
-        repository: "${{ env.RELEASE_REPO }}"
-    - id: "get_github_app_token"
-      if: "${{ fromJSON(env.USE_GITHUB_APP_TOKEN) }}"
-      name: "get github app token"
-      uses: "actions/create-github-app-token@v1"
-      with:
-        app-id: "${{ secrets.APP_ID }}"
-        owner: "${{ github.repository_owner }}"
-        private-key: "${{ secrets.APP_PRIVATE_KEY }}"
-    - id: "github_app_token"
-      name: "set github token"
-      run: |
-        if [[ "${USE_GITHUB_APP_TOKEN}" == "true" ]]; then
-          echo "token=${{ steps.get_github_app_token.outputs.token }}" >> $GITHUB_OUTPUT
-        else
-          echo "token=${{ secrets.GH_TOKEN }}" >> $GITHUB_OUTPUT
-        fi
-    - env:
-        GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
-      if: "${{ !fromJSON(needs.createRelease.outputs.exists) || (needs.createRelease.outputs.draft && fromJSON(needs.createRelease.outputs.draft)) }}"
-      name: "publish release"
-      run: |
-        gh release edit ${{ needs.createRelease.outputs.name }} --draft=false --latest=${{ needs.createRelease.outputs.isLatest }}
-      working-directory: "release"
+      - name: "pull code to release"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "release"
+          repository: "${{ env.RELEASE_REPO }}"
+      - id: "get_github_app_token"
+        if: "${{ fromJSON(env.USE_GITHUB_APP_TOKEN) }}"
+        name: "get github app token"
+        uses: "actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547" # ratchet:actions/create-github-app-token@v1
+        with:
+          app-id: "${{ secrets.APP_ID }}"
+          owner: "${{ github.repository_owner }}"
+          private-key: "${{ secrets.APP_PRIVATE_KEY }}"
+      - id: "github_app_token"
+        name: "set github token"
+        run: |
+          if [[ "${USE_GITHUB_APP_TOKEN}" == "true" ]]; then
+            echo "token=${{ steps.get_github_app_token.outputs.token }}" >> $GITHUB_OUTPUT
+          else
+            echo "token=${{ secrets.GH_TOKEN }}" >> $GITHUB_OUTPUT
+          fi
+      - env:
+          GH_TOKEN: "${{ steps.github_app_token.outputs.token }}"
+        if: "${{ !fromJSON(needs.createRelease.outputs.exists) || (needs.createRelease.outputs.draft && fromJSON(needs.createRelease.outputs.draft)) }}"
+        name: "publish release"
+        run: |
+          gh release edit ${{ needs.createRelease.outputs.name }} --draft=false --latest=${{ needs.createRelease.outputs.isLatest }}
+        working-directory: "release"
   shouldRelease:
     outputs:
       branch: "${{ steps.extract_branch.outputs.branch }}"
@@ -316,35 +284,66 @@ jobs:
       shouldRelease: "${{ steps.should_release.outputs.shouldRelease }}"
     runs-on: "ubuntu-latest"
     steps:
-    - name: "pull code to release"
-      uses: "actions/checkout@v4"
-      with:
-        path: "release"
-        repository: "${{ env.RELEASE_REPO }}"
-    - name: "pull release library code"
-      uses: "actions/checkout@v4"
-      with:
-        path: "lib"
-        ref: "${{ env.RELEASE_LIB_REF }}"
-        repository: "grafana/loki-release"
-    - id: "extract_branch"
-      name: "extract branch name"
-      run: |
-        echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-      working-directory: "release"
-    - id: "should_release"
-      name: "should a release be created?"
-      uses: "./lib/actions/should-release"
-      with:
-        baseBranch: "${{ steps.extract_branch.outputs.branch }}"
+      - name: "pull code to release"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "release"
+          repository: "${{ env.RELEASE_REPO }}"
+      - name: "pull release library code"
+        uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5" # ratchet:actions/checkout@v4
+        with:
+          path: "lib"
+          ref: "${{ env.RELEASE_LIB_REF }}"
+          repository: "grafana/loki-release"
+      - id: "extract_branch"
+        name: "extract branch name"
+        run: |
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        working-directory: "release"
+      - id: "should_release"
+        name: "should a release be created?"
+        uses: "./lib/actions/should-release"
+        with:
+          baseBranch: "${{ steps.extract_branch.outputs.branch }}"
 name: "create release"
 "on":
   push:
     branches:
-    - "release-[0-9]+.[0-9]+.x"
-    - "k[0-9]+"
-    - "main"
+      - "release-[0-9]+.[0-9]+.x"
+      - "k[0-9]+"
+      - "main"
 permissions:
   contents: "write"
   id-token: "write"
   pull-requests: "write"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

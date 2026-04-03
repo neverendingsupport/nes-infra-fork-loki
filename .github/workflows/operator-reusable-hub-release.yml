@@ -21,7 +21,7 @@ jobs:
     steps:
       - id: "get_github_app_token"
         name: Get GitHub App Token
-        uses: "actions/create-github-app-token@v1"
+        uses: "actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547" # ratchet:actions/create-github-app-token@v1
         with:
           app-id: "${{ secrets.APP_ID }}"
           owner: "${{ github.repository_owner }}"
@@ -56,13 +56,13 @@ jobs:
               --force
 
       - name: Checkout operatorhub repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
         with:
           repository: grafanabot/${{ inputs.repo }}
           token: ${{ steps.get_github_app_token.outputs.token }}
 
       - name: Checkout loki to tmp/ directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
         with:
           repository: grafana/loki
           token: ${{ steps.get_github_app_token.outputs.token }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Add OpenShift Supported versions to redhat catalog
         if: ${{ inputs.org == 'redhat-openshift-ecosystem' }}
-        uses: fjogeleit/yaml-update-action@main
+        uses: fjogeleit/yaml-update-action@04ff6ec06568fd21197db746472e36cc425de850 # ratchet:fjogeleit/yaml-update-action@main
         with:
           valueFile: "operators/loki-operator/${{ env.version }}/metadata/annotations.yaml"
           propertyPath: "annotations['com.redhat.openshift.versions']"

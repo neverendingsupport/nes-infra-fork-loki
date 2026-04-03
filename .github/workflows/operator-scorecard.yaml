@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'operator/**'
-    branches: [ main ]
+    branches: [main]
   pull_request:
     paths:
       - 'operator/**'
@@ -14,14 +14,14 @@ jobs:
     name: scorecard
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v5
-      with:
-        go-version-file: ./operator/go.mod
-    - uses: engineerd/setup-kind@v0.5.0
-      with:
-        version: "v0.17.0"
-    - name: Run scorecard
-      run: make scorecard
-      working-directory: ./operator
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
+      - name: Set up Go 1.x
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
+        with:
+          go-version-file: ./operator/go.mod
+      - uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # ratchet:engineerd/setup-kind@v0.5.0
+        with:
+          version: "v0.17.0"
+      - name: Run scorecard
+        run: make scorecard
+        working-directory: ./operator

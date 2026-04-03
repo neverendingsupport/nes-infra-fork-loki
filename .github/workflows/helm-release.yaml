@@ -17,6 +17,6 @@ jobs:
       cr_configfile: production/helm/cr.yaml
       ct_configfile: production/helm/ct.yaml
       helm_tag_prefix: helm
-    secrets:   
+    secrets:
       github_app_id: ${{ secrets.APP_ID }}
       github_app_pem: ${{ secrets.APP_PRIVATE_KEY }}

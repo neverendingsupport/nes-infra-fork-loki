@@ -1,6 +1,6 @@
 "jobs":
   "check":
-    "uses": "grafana/loki-release/.github/workflows/check.yml@main"
+    "uses": "grafana/loki-release/.github/workflows/check.yml@4b7a188be1678d6682b0dae055d6bc6811b1a1ca" # ratchet:grafana/loki-release/.github/workflows/check.yml@main
     "with":
       "build_image": "grafana/loki-build-image:0.34.6"
       "golang_ci_lint_version": "v1.64.5"
@@ -12,4 +12,4 @@
   "pull_request": {}
   "push":
     "branches":
-    - "main"
+      - "main"
